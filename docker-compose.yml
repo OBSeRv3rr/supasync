@@ -54,6 +54,43 @@ services:
       - -c
       - 'mongosh --host mongo:27017 --eval ''try{rs.status().ok && quit(0)} catch {} rs.initiate({_id: "rs0", version: 1, members: [{ _id: 0, host : "mongo:27017" }]})'''
 
+  coredns:
+    image: coredns/coredns:latest
+    container_name: coredns
+    restart: unless-stopped
+    volumes:
+      - ./coredns/Corefile:/etc/coredns/Corefile
+    ports:
+      - "50053:53/tcp"
+      - "50053:53/udp"
+    command: -conf /etc/coredns/Corefile
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SERVERURL=auto #optional
+      - SERVERPORT=51820 #optional
+      - PEERS=4 #optional
+      - PEERDNS=auto #optional
+      - INTERNAL_SUBNET=10.13.13.0 #optional
+      - ALLOWEDIPS=0.0.0.0/0 #optional
+    volumes:
+      - ~/wireguard/config:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - 51820:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+
+
 volumes:
   mongo_storage:
   pg_data:
