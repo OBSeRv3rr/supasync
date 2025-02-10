@@ -1,0 +1,30 @@
+replication:
+  connections:
+    - type: postgresql
+      uri: postgresql://postgres:postgres@postgres:5432/postgres
+
+      sslmode: disable
+
+storage:
+  type: mongodb
+  uri: mongodb://mongo:27017/powersync_demo
+
+port: 8080
+
+sync_rules:
+  content: |
+    bucket_definitions:
+      global:
+        data:
+          - SELECT * FROM lists
+          - SELECT * FROM todos
+
+client_auth:
+  supabase: true
+
+  # jwks_uri: [TODO]
+
+  audience: ['powersync-dev', 'powersync']
+
+  telemetry:
+    disable_telemetry_sharing: false
