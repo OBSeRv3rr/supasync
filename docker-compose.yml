@@ -60,6 +60,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./coredns/Corefile:/etc/coredns/Corefile
+      - ./coredns/allowed_hosts:/etc/coredns/allowed_hosts.hosts
     ports:
       - "50053:53/tcp"
       - "50053:53/udp"

@@ -1,4 +1,9 @@
 .:53 {
+    # Подключаем hosts-плагин и указываем путь к файлу allowed_hosts
+    hosts /etc/coredns/allowed_hosts.hosts {
+        fallthrough
+    }
+    # Если запись не найдена в файле, запросы перенаправляются на внешний DNS (например, Google DNS)
     forward . 8.8.8.8
     log
     errors
