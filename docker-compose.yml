@@ -10,8 +10,9 @@ services:
       - ./config/config.yaml:/config/config.yaml
     environment:
       POWERSYNC_CONFIG_PATH: /config/config.yaml
+      POWERSYNC_PORT: ${POWERSYNC_PORT}
     ports:
-      - 8080:8080
+      - "${POWERSYNC_PORT}:8080"
 
   postgres:
     image: postgres:latest
@@ -25,32 +26,14 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "${PG_DATABASE_PORT}:5432"
     command: ["postgres", "-c", "wal_level=logical"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${PG_DATABASE_USER} -d ${PG_DATABASE_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # mongo:
-  #   image: mongo:7.0
-  #   command: --replSet rs0 --bind_ip_all --quiet
-  #   restart: unless-stopped
-  #   ports:
-  #     - 27017:27017
-  #   volumes:
-  #     - mongo_storage:/data/db
-
-  # mongo-rs-init:
-  #   image: mongo:7.0
-  #   depends_on:
-  #     - mongo
-  #   restart: on-failure
-  #   entrypoint:
-  #     - bash
-  #     - -c
-  #     - 'mongosh --host mongo:27017 --eval ''try{rs.status().ok && quit(0)} catch {} rs.initiate({_id: "rs0", version: 1, members: [{ _id: 0, host : "mongo:27017" }]})'''
 
   coredns:
     image: coredns/coredns:latest
@@ -60,8 +43,8 @@ services:
       - ./coredns/Corefile:/etc/coredns/Corefile
       - ./coredns/allowed_hosts:/etc/coredns/allowed_hosts.hosts
     ports:
-      - "50053:53/tcp"
-      - "50053:53/udp"
+      - "${COREDNS_PORT}:53/tcp"
+      - "${COREDNS_PORT}:53/udp"
     command: -conf /etc/coredns/Corefile
 
   wireguard:
@@ -71,20 +54,21 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - SERVERURL=auto #optional
-      - SERVERPORT=51820 #optional
-      - PEERS=4 #optional
-      - PEERDNS=auto #optional
-      - INTERNAL_SUBNET=10.13.13.0 #optional
-      - ALLOWEDIPS=0.0.0.0/0 #optional
+      - PUID=${WG_PUID}
+      - PGID=${WG_PGID}
+      - TZ=${WG_TZ}
+      - SERVERURL=${WG_SERVERURL}
+      - SERVERPORT=${WG_SERVERPORT}
+      - PEERS=${WG_PEERS}
+      - PEERDNS=${WG_PEERDNS}
+      - INTERNAL_SUBNET=${WG_INTERNAL_SUBNET}
+      - ALLOWEDIPS=${WG_ALLOWEDIPS}
     volumes:
       - ~/wireguard/config:/config
       - /lib/modules:/lib/modules
     ports:
       - 51820:51820/udp
+      - 51821:51821/tcp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped
